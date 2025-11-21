@@ -16,8 +16,6 @@ COPY --from=deps /app/node_modules ./node_modules
 # Copy all project files INCLUDING .env.local
 COPY . .
 
-# Next.js will automatically read .env.local during build
-# This loads NEXT_PUBLIC_* variables into the bundle
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
 
@@ -33,11 +31,13 @@ RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
 # Copy built files from builder
-COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-# Copy .env.local for runtime server-side variables
+# If you have a public folder, uncomment this line. Otherwise, skip it.
+# COPY --from=builder /app/public ./public
+
+# Copy environment file for runtime (optional)
 COPY --from=builder --chown=nextjs:nodejs /app/.env.local ./.env.local
 
 USER nextjs
